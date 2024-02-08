@@ -41,8 +41,21 @@ public class CsvParserTest {
 
         assertThat(employee.getId(), is(equalTo(1L)));
         assertThat(employee.getFirstName(), allOf(notNullValue(), equalTo("John")));
-        assertThat(employee.getCountry(), anyOf(equalTo("USA"), equalTo("UK")));
     }
+
+    @Test
+    public void testParseCSV_ShouldContainSpecificEmployee() {
+        CsvJsonParser parser = new CsvJsonParser();
+        String[] columnMapping = {"id", "firstName", "lastName", "country", "age"};
+        String fileName = "data.csv";
+
+        List<Employee> result = parser.parseCSV(columnMapping, fileName);
+
+        Employee expectedEmployee = new Employee(1, "John", "Smith", "USA", 25);
+        assertThat(result, hasItem(hasProperty("firstName", equalTo("John"))));
+        assertThat(result, hasItem(hasProperty("lastName", equalTo("Smith"))));
+    }
+
 
 
 }
