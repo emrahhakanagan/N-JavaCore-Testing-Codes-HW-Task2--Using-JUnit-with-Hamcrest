@@ -1,7 +1,10 @@
 package org.example;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.io.File;
 import java.util.List;
 
 import static org.example.CsvJsonParser.listToJson;
@@ -9,19 +12,19 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 public class CsvJsonParserTest {
-
     private final String[] COLUMN_MAPPING_EMPLOYEE = {"id", "firstName", "lastName", "country", "age"};
+    final String VALID_FILE_CSV_PATH = new File(getClass().getClassLoader().getResource("valid_data.csv")
+            .getFile()).getAbsolutePath();
+    final String INVALID_FILE_CSV_PATH = new File(getClass().getClassLoader().getResource("invalid_data.csv")
+            .getFile()).getAbsolutePath();
 
     @Test
     @DisplayName("Test ParseCSV Positive")
     public void testParseCsvWithValidInputShouldReturnCorrectData() {
-        final String CSV_VALID_FILE_NAME = "valid_data.csv";
-
         CsvJsonParser parser = new CsvJsonParser();
+        List<Employee> resultEmpsList = parser.parseCSV(COLUMN_MAPPING_EMPLOYEE, VALID_FILE_CSV_PATH);
 
-        List<Employee> resultEmpsList = parser.parseCSV(COLUMN_MAPPING_EMPLOYEE, CSV_VALID_FILE_NAME);
-
-//        assertThat("Список не должен быть null", resultEmpsList, not(is(empty())));
+        assertThat("Список не должен быть null", resultEmpsList, not(is(empty())));
         assertThat(resultEmpsList, allOf(
                 hasSize(2),
                 not(is(empty()))
@@ -30,39 +33,39 @@ public class CsvJsonParserTest {
         var firstEmployee = resultEmpsList.get(0);
 
         Employee expectedFirstEmployee = new Employee(1, "John", "Smith", "USA", 25);
-        assertThat("Список не должен быть null", firstEmployee, allOf(
+        assertThat("Данные ожидаемые не соответствуют с реальными", firstEmployee, allOf(
                 hasProperty("id", is(expectedFirstEmployee.getId())),
                 hasProperty("firstName", equalTo(expectedFirstEmployee.getFirstName())),
                 hasProperty("lastName", equalTo(expectedFirstEmployee.getLastName())),
                 hasProperty("country", equalTo(expectedFirstEmployee.getCountry())),
                 hasProperty("age", is(expectedFirstEmployee.getAge()))
         ));
-
     }
 
     @Test
     @DisplayName("Test ListToJson Positive")
     public void testListToJsonWithValidInputShouldReturnCorrectData() {
         CsvJsonParser parser = new CsvJsonParser();
-        List<Employee> employees = List.of(
-                new Employee(1, "John", "Doe", "USA", 30),
-                new Employee(2, "Anna", "Smith", "UK", 25)
+        List<Employee> resultEmpsList = parser.parseCSV(COLUMN_MAPPING_EMPLOYEE, VALID_FILE_CSV_PATH);
+        String jsonActual = listToJson(resultEmpsList);
+
+        var employees = List.of(
+                new Employee(1, "John", "Smith", "USA", 25),
+                new Employee(2, "Ivan", "Petrov", "RU", 23)
         );
+        String jsonExpected = listToJson(employees);
 
-        String json = listToJson(employees);
-
-        assertThat(json, notNullValue());
-        assertThat(json, startsWith("["));
-        assertThat(json, endsWith("]"));
+        assertThat("JSON строка должна соответствовать ожидаемой", jsonActual, is(jsonExpected));
+        assertThat(jsonActual, notNullValue());
+        assertThat(jsonActual, startsWith("["));
+        assertThat(jsonActual, endsWith("]"));
     }
 
     @Test
     @DisplayName("Test ParseCSV Negative")
     public void testParseCSVWithInvalidInputShouldReturnEmptyList() {
-        final String CSV_INVALID_FILE_NAME = "invalid_data.csv";
         CsvJsonParser parser = new CsvJsonParser();
-
-        List<Employee> resultEmpsList = parser.parseCSV(COLUMN_MAPPING_EMPLOYEE, CSV_INVALID_FILE_NAME);
+        List<Employee> resultEmpsList = parser.parseCSV(COLUMN_MAPPING_EMPLOYEE, INVALID_FILE_CSV_PATH);
 
         assertThat(resultEmpsList, is(empty()));
     }
